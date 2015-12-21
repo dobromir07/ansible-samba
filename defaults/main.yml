@@ -1,0 +1,26 @@
+# defaults/main.yml
+---
+
+samba_workgroup: 'WORKGROUP'
+samba_server_string: '%h file server'
+# samba_server_string: 'Fileserver %m'
+
+# samba_log:
+#   log_size: 5000
+#   log_file: /var/log/samba/log.%m
+
+# samba_security: 'user'
+samba_map_to_guest: 'Bad User'
+
+samba_load_printers: 'no'
+samba_load_homes: 'no'
+samba_shares_root: '/srv/shares'
+
+# samba defaults = 0744
+samba_shares_create_mask: 664
+
+# samba defaults = 0755
+samba_shares_directory_mask: 775
+
+samba_shares_force_dir_mode: 775
+samba_shares_force_create_mode: 660

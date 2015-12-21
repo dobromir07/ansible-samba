@@ -1,0 +1,12 @@
+---
+# vars/RedHat.yml
+#
+# default vars for a redhat system or derivative
+#
+
+samba_services:
+  - smb
+samba_packages:
+  - samba
+  # - samba-common-tools
+  # - samba-common-libs

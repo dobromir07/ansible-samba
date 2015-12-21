@@ -1,0 +1,10 @@
+---
+# File: vars/Debian.yml
+#
+# default vars for a debian system or derivative
+#
+samba_services:
+  - smbd
+  - nmbd
+samba_packages:
+  - samba

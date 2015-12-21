@@ -1,0 +1,245 @@
+# vim: ft=samba
+# {{ ansible_managed }}
+
+# This is the main Samba configuration file. You should read the
+# smb.conf(5) manual page in order to understand the options.
+#
+# Some options that are often worth tuning have been included as
+# commented-out examples in this file.
+#  - When such options are commented with ";", the proposed setting
+#    differs from the default Samba behaviour
+#  - When commented with "#", the proposed setting is the default
+#    behaviour of Samba but the option is considered important
+#    enough to be mentioned here
+#
+# NOTE: Whenever you modify this file you should run the command
+# "testparm" to check that you have not made any basic syntactic
+# errors.
+
+#======================= Global Settings =======================
+
+[global]
+
+## Browsing/Identification ###
+
+# Change this to the workgroup/NT-domain name your Samba server will part of
+  # samba_workgroup = WORKGROUP
+{% if samba_workgroup is defined %}
+  workgroup = {{ samba_workgroup }}
+{% endif %}
+
+# server string is the equivalent of the NT Description field
+  # server string = Samba %v
+{% if samba_server_string is defined %}
+  server string = {{ samba_server_string }}
+{% endif %}
+
+# By default, netbios name == first component of the host's dns name
+# other names advertised by nmbd
+; netbios aliases = m1 m2 m3
+
+# Yes by default, this allows nmbd to search for NetBIOS names through DNS.
+  dns proxy = yes
+
+#### Networking ####
+
+# The specific set of interfaces / networks to bind to
+# This can be either the interface name or an IP address/netmask;
+# interface names are normally preferred
+;  interfaces = 127.0.0.0/8 eth0
+
+# Only bind to the named interfaces and/or networks; you must use the
+# 'interfaces' option above to use this.
+# It is recommended that you enable this feature if your Samba machine is
+# not protected by a firewall or is a firewall itself.  However, this
+# option cannot handle dynamic or non-broadcast interfaces correctly.
+;   bind interfaces only = yes
+
+#### Debugging/Accounting ####
+
+{% if samba_log is defined %}
+# This tells Samba to use a separate log file for each machine
+# that connects
+  log file = {{ samba_log.log_file }}
+
+# Cap the size of the individual log files (in KiB).
+  max log size = {{ samba_log.log_size|default('1000') }}
+{% else %}
+# If you want Samba to only log through syslog then set the following
+# parameter to 'yes'.
+  syslog only = yes
+
+# We want Samba to log a minimum amount of information to syslog. Everything
+# should go to /var/log/samba/log.{smbd,nmbd} instead. If you want to log
+# through syslog you should set the following parameter to something higher.
+  syslog = 1
+{% endif %}
+
+# Do something sensible when Samba crashes: mail the admin a backtrace
+  panic action = /usr/share/samba/panic-action %d
+
+####### Authentication #######
+
+# Server role. Defines in which mode Samba will operate. Possible
+# values are "standalone server", "member server", "classic primary
+# domain controller", "classic backup domain controller", "active
+# directory domain controller".
+#
+# Most people will want "standalone sever" or "member server".
+  server role = standalone server
+
+# "security = user" is always a good idea. This will require a Unix account
+# in this server for every user accessing the server. See
+# /usr/share/doc/samba-doc/htmldocs/Samba3-HOWTO/ServerType.html
+# in the samba-doc package for details.
+  security = {{ samba_security|default('user') }}
+
+# You may wish to use password encryption.  See the section on
+# 'encrypt passwords' in the smb.conf(5) manpage before enabling.
+  encrypt passwords = true
+
+# If you are using encrypted passwords, Samba will need to know what
+# password database type you are using.
+  passdb backend = {{ samba_passdb_backend|default('tdbsam') }}
+
+# This boolean parameter controls whether Samba attempts to sync the Unix
+# password with the SMB password when the encrypted SMB password in the
+# passdb is changed.
+;  unix password sync = yes
+
+# For Unix password sync to work, the following parameters must be set
+# (thanks to Ian Kahan <<kahan@informatik.tu-muenchen.de> for
+# sending the correct chat script for the passwd program
+  passwd program = /usr/bin/passwd %u
+  passwd chat = *Enter\snew\s*\spassword:* %n\n *Retype\snew\s*\spassword:* %n\n *password\supdated\ssuccessfully* .
+
+# This option controls how unsuccessful authentication attempts are mapped
+# to anonymous connections
+  map to guest = {{ samba_map_to_guest|default('Never') }}
+
+########## Domains ###########
+
+# Allow nmbd(8) to try and become a local master browser on a subnet.
+# If set to no then nmbd will not attempt to become a local master browser on a
+# subnet and will also lose in all browsing elections.
+ local master = {{ samba_local_master|default('no') }}
+
+# If yes, enable WAN-wide browse list collation
+ domain master = {{ samba_domain_master|default('no') }}
+
+# ( yes | no | auto ) Yes will force an election.
+ preferred master = {{ samba_preferred_master|default('no') }}
+
+# name resolve order = host lmhosts wins bcast
+
+############ Misc ############
+
+# Using the following line enables you to customise your configuration
+# on a per machine basis. The %m gets replaced with the netbios name
+# of the machine that is connecting
+  ;   include = /home/samba/etc/smb.conf.%m
+
+# Maximum number of usershare. 0 (default) means that usershare is disabled.
+  ;   usershare max shares = 100
+
+# Allow users who've been granted usershare privileges to create
+# public shares, not just authenticated ones
+;  usershare allow guests = yes
+
+# By default, \\server\username shares can be connected to by anyone
+# with access to the samba server.
+# Un-comment the following parameter to make sure that only "username"
+# can connect to \\server\username
+# This might need tweaking when using external authentication schemes
+#valid users = %S
+
+  guest account = nobody
+
+# hide the lost+found folder
+  hide files = /lost+found/
+
+#======================= Share Definitions =======================
+
+# Un-comment the following (and tweak the other settings below to suit)
+# to enable the default home directory shares. This will share each
+# user's home directory as \\server\username
+  ;[homes]
+  ;   comment = Home Directories
+  ;   browseable = no
+{% if samba_load_homes == 'yes' %}
+[homes]
+  comment = Home Directories
+  browseable = no
+  writable = yes
+
+# By default, the home directories are exported read-only. Change the
+# next parameter to 'no' if you want to be able to write to them.
+;   read only = yes
+
+# File creation mask is set to 0700 for security reasons. If you want to
+# create files with group=rw permissions, set next parameter to 0775.
+;  create mask = 0775
+
+# Directory creation mask is set to 0700 for security reasons. If you want to
+# create dirs. with group=rw permissions, set next parameter to 0775.
+;  directory mask = 0775
+{% endif %}
+
+{#
+{% if samba_load_printers == 'no' %}
+[printers]
+# Don't load printers
+  load printers = no
+  printable = no
+  printing = bsd
+{% else %}
+  comment = All Printers
+  browseable = no
+  path = /var/spool/samba
+  printable = yes
+  guest ok = no
+  read only = yes
+  create mask = 0700
+{% endif %}
+#}
+
+{#
+# Windows clients look for this share name as a source of downloadable
+# printer drivers
+  [print$]
+  comment = Printer Drivers
+  path = /var/lib/samba/printers
+  browseable = yes
+  read only = yes
+  guest ok = no
+#}
+
+{% if samba_shares is defined %}
+{% for share in samba_shares %}
+[{{ share.name }}]
+  {% if share.comment is defined %}
+  comment = {{ share.comment }}
+  {% endif %}
+  path = {{ samba_shares_root }}/{{ share.name }}
+  public = {{ share.public|default('no') }}
+  {% if share.valid_users is defined %}
+  valid users = {{ share.valid_users }}
+  {% endif %}
+  {% if share.write_list is defined %}
+  write list = {{ share.write_list }}
+  {% endif %}
+  {% if share.read_only is defined %}
+  read only = {{ share.read_only }}
+  {% endif %}
+
+  {% if share.force_group is defined %}
+  force group = {{ share.force_group }}
+  {% endif %}
+  directory mask = {{ share.directory_mask|default(samba_shares_directory_mask) }}
+  create mask = {{ share.create_mask|default(samba_shares_create_mask) }}
+  force directory mode = {{ share.force_directory_mode|default(samba_shares_force_dir_mode) }}
+  force create mode = {{ share.force_create_mode|default(samba_shares_force_create_mode) }}
+  inherit permissions = {{ share.inherit_permissions|default('no') }}
+  inherit acls = {{ share.inherit_acls|default('no') }}
+{% endfor %}
+{% endif%}

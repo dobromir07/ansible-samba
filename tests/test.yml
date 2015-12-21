@@ -1,0 +1,40 @@
+---
+- hosts: all
+  become: true
+  vars:
+    # samba_netbios_name: SAMBA_TEST
+    # samba_server_string: 'Welcome to the test file server'
+    # samba_workgroup: TESTGROUP
+
+    samba_load_homes: no
+    # samba_load_printers: no
+
+    samba_log:
+      log_size: 1000
+      log_file: /var/log/samba.log
+
+    samba_map_to_guest: Never
+    samba_users:
+      - name: vagrant
+        password: vagrant
+
+    samba_shares_root: /srv/samba
+    samba_shares:
+      - name: private
+        comment: 'vagrant rw share'
+        write_list: '+vagrant'
+        group: vagrant
+      - name: protected
+        public: yes
+        comment: 'vagrant rw and public ro'
+        write_list: '+vagrant'
+        group: vagrant
+      - name: publics
+        comment: 'users rw and public ro'
+        public: yes
+        write_list: '+users'
+        group: users
+        setype: public_content_t
+
+  roles:
+    - samba

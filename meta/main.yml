@@ -1,0 +1,16 @@
+---
+galaxy_info:
+  author: Felix Archambault
+  description: Install and configure a samba standalone file server on a target host.
+  company:
+  license: BSD
+  min_ansible_version: 1.7
+  platforms:
+  - name: EL
+    versions:
+      - 7
+  - name: Ubuntu
+  categories:
+    - system
+    - networking
+dependencies: []

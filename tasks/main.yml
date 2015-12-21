@@ -1,0 +1,55 @@
+# file: tasks/main.yml
+---
+
+# specify the packages to install depending on OS
+# see the vars folder for a complete list
+- name: load OS specific variables (see ../vars/*)
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- name: install Samba packages
+  action: "{{ ansible_pkg_mgr }} pkg={{ item }} state=latest"
+  with_items: samba_packages
+
+- name: disable selinux
+  selinux: state=disabled
+  when: ansible_os_family  == 'RedHat'
+
+- name: Create share directories
+  with_items: samba_shares
+  file:
+    state: directory
+    path: "{{ samba_shares_root}}/{{ item.name }}"
+    owner: root
+    group: "{{ item.group|default('users') }}"
+    mode: "{{ item.directory_mode|default(samba_shares_force_dir_mode) }}"
+    setype: "{{ item.setype|default('samba_share_t') }}"
+  when: samba_shares is defined
+  tags: samba
+
+- name: template samba configuration
+  template:
+    dest: /etc/samba/smb.conf
+    src: smb.conf.j2
+    owner: root
+    group: root
+    mode: 0640
+    validate: 'testparm -s %s'
+  notify: restart samba
+  tags: samba
+
+- name: start and enable samba service
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  with_items: samba_services
+  tags: samba
+
+- name: create non-existing samba users
+  shell: >
+    (pdbedit -L | grep {{ item.name }} 2>&1 > /dev/null) \
+    || (echo {{ item.password }}; echo {{ item.password }}) \
+    | smbpasswd -s -a {{ item.name }}
+  with_items: samba_users
+  when: samba_users is defined
+  tags: samba
