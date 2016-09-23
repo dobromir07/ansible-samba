@@ -1,16 +1,21 @@
 ---
 galaxy_info:
   author: Felix Archambault
-  description: Install and configure a samba standalone file server on a target host.
+  description: >
+    A role to install and configure a samba standalone file server on a
+    target host.
+
   company:
-  license: BSD
-  min_ansible_version: 1.7
+  license: MIT
+  min_ansible_version: 2.0
   platforms:
   - name: EL
     versions:
       - 7
   - name: Ubuntu
-  categories:
+  galaxy_tags:
     - system
     - networking
+    - file server
+
 dependencies: []

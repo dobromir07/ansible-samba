@@ -1,0 +1,20 @@
+---
+github_account: archf
+
+# requirements:
+description:
+  - Install the necessary packages
+  - Create and configure samba shares
+  - Generate all shares directories if they do not exist yet
+  - Manage users and passwords
+
+todos:
+  - printer issue
+  - selinux configuration
+  - firewall contiguration
+
+role_stack: |
+  This role was carefully selected to be part an ultimate deck of roles to manage
+  your infrastructure.
+
+  All roles' documentation is wrapped in this [convenient guide](http://127.0.0.1:8000/).
