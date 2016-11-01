@@ -20,21 +20,6 @@ Minimum required ansible version is 2.0.
 Those variables from `vars/*.{yml,json}` are loaded dynamically during task
 runtime using the `include_vars` module.
 
-Variables loaded from `vars/Debian.yml`.
-
-```yaml
-# File: vars/Debian.yml
-#
-# default vars for a debian system or derivative
-#
-samba_services:
-  - smbd
-  - nmbd
-samba_packages:
-  - samba
-
-```
-
 Variables loaded from `vars/RedHat.yml`.
 
 ```yaml
@@ -49,6 +34,21 @@ samba_packages:
   - samba
   # - samba-common-tools
   # - samba-common-libs
+
+```
+
+Variables loaded from `vars/Debian.yml`.
+
+```yaml
+# File: vars/Debian.yml
+#
+# default vars for a debian system or derivative
+#
+samba_services:
+  - smbd
+  - nmbd
+samba_packages:
+  - samba
 
 ```
 
