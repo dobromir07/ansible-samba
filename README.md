@@ -1,7 +1,7 @@
 # ansible-samba
 
 A role to install and configure a samba standalone file server on a target host.
-
+1
 
 ## Requirements
 
